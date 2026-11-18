@@ -1630,6 +1630,98 @@
         }
       ]
     },
+"uoc-luong-nhan-chia-6": {
+  "lessonId": "bai-10",
+  "title": "Luyện tập ước lượng bảng nhân và chia 7",
+  "kind": "exercise",
+  "questions": [
+    {
+      "id": "estimate-01",
+      "type": "estimate",
+      "prompt": "Ước lượng kết quả: 7 × 2",
+      "correctAnswer": "14|11-17",
+      "points": 5
+    },
+    {
+      "id": "estimate-02",
+      "type": "estimate",
+      "prompt": "Ước lượng kết quả: 7 × 3",
+      "correctAnswer": "21|17-25",
+      "points": 5
+    },
+    {
+      "id": "estimate-03",
+      "type": "estimate",
+      "prompt": "Ước lượng kết quả: 7 × 4",
+      "correctAnswer": "28|22-34",
+      "points": 5
+    },
+    {
+      "id": "estimate-04",
+      "type": "estimate",
+      "prompt": "Ước lượng kết quả: 7 × 5",
+      "correctAnswer": "35|28-42",
+      "points": 5
+    },
+    {
+      "id": "estimate-05",
+      "type": "estimate",
+      "prompt": "Ước lượng kết quả: 7 × 6",
+      "correctAnswer": "42|34-50",
+      "points": 5
+    },
+    {
+      "id": "estimate-06",
+      "type": "estimate",
+      "prompt": "Ước lượng kết quả: 7 × 7",
+      "correctAnswer": "49|39-59",
+      "points": 5
+    },
+    {
+      "id": "estimate-07",
+      "type": "estimate",
+      "prompt": "Ước lượng kết quả: 7 × 8",
+      "correctAnswer": "56|45-67",
+      "points": 5
+    },
+    {
+      "id": "estimate-08",
+      "type": "estimate",
+      "prompt": "Ước lượng kết quả: 7 × 9",
+      "correctAnswer": "63|50-76",
+      "points": 5
+    },
+    {
+      "id": "estimate-09",
+      "type": "estimate",
+      "prompt": "Ước lượng kết quả: 70 : 7",
+      "correctAnswer": "10|8-12",
+      "points": 5
+    },
+    {
+      "id": "estimate-10",
+      "type": "estimate",
+      "prompt": "Ước lượng kết quả: 42 : 7",
+      "correctAnswer": "6|5-7",
+      "points": 5
+    },
+    {
+      "id": "estimate-11",
+      "type": "estimate",
+      "prompt": "Ước lượng kết quả: 56 : 7",
+      "correctAnswer": "8|6-10",
+      "points": 5
+    },
+    {
+      "id": "estimate-12",
+      "type": "estimate",
+      "prompt": "Ước lượng kết quả: 63 : 7",
+      "correctAnswer": "9|7-11",
+      "points": 5
+    }
+  ]
+},
+
     "bai-15-kiem-tra": {
       "lessonId": "bai-15",
       "title": "Bài 15: Kiểm tra định kỳ tháng 10",

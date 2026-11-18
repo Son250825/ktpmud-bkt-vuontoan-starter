@@ -112,15 +112,53 @@ try { db.exec('ALTER TABLE users ADD COLUMN avatar TEXT'); } catch (_) {}
 try { db.exec('ALTER TABLE users ADD COLUMN google_id TEXT'); } catch (_) {}
 
 /** Đợt 2: nạp metadata bộ câu hỏi cho cả DB cũ (đã tạo ở Đợt 1) lẫn DB mới. */
+/** Nạp bổ sung bộ câu hỏi cho cả DB cũ và DB mới. */
 function seedQuestionSets() {
-  const { c } = db.prepare('SELECT COUNT(*) AS c FROM question_sets').get();
-  if (c > 0) return;
   const seed = JSON.parse(fs.readFileSync(SEED_PATH, 'utf8'));
-  const ins = db.prepare(`INSERT OR IGNORE INTO question_sets (id,title,kind,lesson_id,star_reward,duration_minutes) VALUES (?,?,?,?,?,?)`);
-  for (const [id, set] of Object.entries(seed.questionSets)) {
-    ins.run(id, set.title || id, set.kind || 'exercise', set.lessonId || null,
-      set.kind === 'exam' ? 100 : 40, set.durationMinutes || 0);
-  }
+
+  const insertSet = db.prepare(`
+    INSERT OR IGNORE INTO question_sets
+    (id, title, kind, lesson_id, star_reward, duration_minutes)
+    VALUES (?, ?, ?, ?, ?, ?)
+  `);
+
+  const insertQuestion = db.prepare(`
+    INSERT OR IGNORE INTO questions
+    (id, set_id, lesson_id, type, prompt, options_json,
+     correct_answer, points, category, sort_order)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `);
+
+  const tx = db.transaction(() => {
+    for (const [setId, set] of Object.entries(seed.questionSets)) {
+      insertSet.run(
+        setId,
+        set.title || setId,
+        set.kind || 'exercise',
+        set.lessonId || null,
+        set.kind === 'exam' ? 100 : 40,
+        set.durationMinutes || 0
+      );
+
+      (set.questions || []).forEach((q, index) => {
+        insertQuestion.run(
+          q.id,
+          setId,
+          set.lessonId || null,
+          q.type,
+          q.prompt,
+          q.options ? JSON.stringify(q.options) : null,
+          q.correctAnswer,
+          q.points || 1,
+          q.category || '',
+          index + 1
+        );
+      });
+    }
+  });
+
+  tx();
+  console.log('[DB] Đã kiểm tra và bổ sung bộ câu hỏi từ seed.json');
 }
 
 function seedIfEmpty() {

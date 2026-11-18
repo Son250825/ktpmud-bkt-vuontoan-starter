@@ -4,6 +4,7 @@
  * Nguyên tắc: đáp án đúng (correct_answer) KHÔNG BAO GIỜ gửi xuống trình duyệt
  * ở endpoint lấy câu hỏi — việc chấm điểm diễn ra 100% trên server.
  */
+const { gradeEstimate } = require('./estimate');
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const db = require('./db');
@@ -171,14 +172,59 @@ router.post('/submissions', requireAuth, (req, res) => {
   const meta = setMeta(setId);
   if (!meta) return res.status(400).json({ error: 'Bộ bài không hợp lệ.' });
   const questions = db.prepare('SELECT * FROM questions WHERE set_id=? ORDER BY sort_order').all(setId);
-  let earned = 0, max = 0, correct = 0;
-  const detail = questions.map(q => {
-    max += q.points;
-    const given = answers[q.id] == null ? '' : String(answers[q.id]).trim().toLowerCase();
-    const ok = given === String(q.correct_answer).trim().toLowerCase();
-    if (ok) { earned += q.points; correct++; }
-    return { questionId: q.id, correct: ok, correctAnswer: q.correct_answer };
-  });
+ let earned = 0, max = 0, correct = 0;
+
+const detail = questions.map(q => {
+  const points = Number(q.points) || 0;
+  max += points;
+if (q.type === 'estimate') {
+  const answer = answers[q.id] || {};
+
+  const result = gradeEstimate(
+    q.correct_answer,
+    answer,
+    points
+  );
+
+  earned += result.earnedPoints;
+
+  if (result.correct) correct++;
+
+ return {
+  questionId: q.id,
+  correct: result.correct,
+  estimateCorrect: result.estimateCorrect,
+  exactCorrect: result.exactCorrect,
+  earnedPoints: result.earnedPoints,
+  correctAnswer: q.correct_answer,
+  studentAnswer: {
+    lower: answer.lower ?? '',
+    upper: answer.upper ?? '',
+    exact: answer.exact ?? ''
+  },
+  feedback: result.feedback
+};
+}
+
+  // Giữ nguyên cách chấm các dạng câu hỏi cũ
+  const given = answers[q.id] == null
+    ? ''
+    : String(answers[q.id]).trim().toLowerCase();
+
+  const ok = given === String(q.correct_answer).trim().toLowerCase();
+
+  if (ok) {
+    earned += points;
+    correct++;
+  }
+
+  return {
+    questionId: q.id,
+    correct: ok,
+    earnedPoints: ok ? points : 0,
+    correctAnswer: q.correct_answer
+  };
+});
   const percent = max ? Math.round((earned / max) * 100) : 0;
 
   // Sao thưởng chỉ tính trên phần % tiến bộ so với điểm cao nhất cũ (chống "cày" sao bằng cách nộp lại)

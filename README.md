@@ -25,6 +25,15 @@ npm start       # mở http://localhost:3000
 
 Lần chạy đầu, server tự tạo `data/vuon-toan.db` và nạp dữ liệu mẫu từ `data/seed.json`.
 
+### Lệnh tối thiểu của đề thi (Track B)
+
+```bash
+npm ci               # cài đúng phiên bản trong package-lock.json
+npm run reset-db     # xoá DB cũ (data/vuon-toan.db*) để nạp lại dữ liệu mẫu + 12 fixtures ước lượng
+npm start            # http://localhost:3000
+npm test             # chạy toàn bộ test tự động (node --test, không cần cấu hình thêm)
+```
+
 ### Tài khoản mẫu
 
 | Vai trò | Tên đăng nhập | Mật khẩu | Ghi chú |
@@ -113,3 +122,5 @@ vuon-toan-lop-3/
 - Nhúng font/icon tại chỗ để offline 100% cả chữ và biểu tượng.
 - Thực hiện deploy thật (cần tài khoản hosting/tên miền của trường).
 - Thêm biểu đồ theo tuần/tháng và xuất phiếu bồi dưỡng PDF theo dạng bài hay sai.
+
+## 8. Track B — Dạng bài "Ước lượng trước khi tính đúng"
