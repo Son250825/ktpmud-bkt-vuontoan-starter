@@ -230,6 +230,18 @@
           <a href="exercise.html?lesson=bai-${targetLesson.number}" class="flex-1 py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-center shadow-md active:translate-y-0.5 transition-all">Luyện tập Cơ bản</a>
           <a href="exercise.html?lesson=bai-${targetLesson.number}&level=nang-cao" class="flex-1 py-3 px-4 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-extrabold text-center shadow-md active:translate-y-0.5 transition-all">Nâng cao</a>
         </div>
+         ${
+          targetLesson.number === 10
+            ? `
+              <div class="mt-2">
+                <a href="exercise.html?lesson=bai-10&set=uoc-luong-nhan-chia-6"
+                   class="block w-full py-3 px-4 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-extrabold text-center shadow-md transition-all">
+                  Luyện tập ước lượng
+                </a>
+              </div>
+            `
+            : ''
+        }
         <div class="flex flex-col sm:flex-row gap-2.5">
           <a href="lesson.html?lesson=bai-${targetLesson.number}" class="flex-1 py-3 px-4 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 font-bold text-center transition-all">Ôn bài SGK</a>
           <a href="game.html" class="flex-1 py-3 px-4 rounded-xl bg-sky-50 hover:bg-sky-100 text-sky-800 border border-sky-200 font-bold text-center transition-all">Trò chơi toán</a>
