@@ -145,8 +145,92 @@ Cập nhật khi phát sinh câu hỏi cần trao đổi với giảng viên.
 
 ## Kết quả cuối — Freeze 19/11/2026
 
-- Final commit SHA: Cập nhật sau khi freeze.
-- Release tag: bkt-2026-N24-rc1
-- CI run URL: Cập nhật sau khi có kết quả chạy thành công.
-- Trạng thái cuối các acceptance criteria: Cập nhật sau khi rà soát.
-- Các công việc chưa hoàn thành và lý do: Cập nhật tại thời điểm freeze.
+### 1. Thông tin phiên bản đóng băng
+
+| Nội dung | Giá trị |
+|---|---|
+| Nhóm | N24 |
+| Track | B — Vườn Toán Lớp 3 |
+| Sản phẩm | Vườn Toán Lớp 3 — Ước lượng trước khi tính đúng |
+| Starter repository | `fossbk-spec/ktpmud-bkt-vuontoan-starter` |
+| Starter commit | `aca3ea934fadc02251c761443405546c7bc02fc7` |
+| Fork repository | `https://github.com/Son250825/ktpmud-bkt-vuontoan-starter` |
+| Commit mã nguồn trước khi cập nhật PROGRESS.md | `0449f863a07227e30c8584826916b62cd5d48a8d` |
+| Commit cuối cùng của phiên bản nộp bài | Sẽ cập nhật sau khi commit `PROGRESS.md` |
+| Release tag | Sẽ tạo sau khi chốt commit cuối cùng |
+| CI trên fork | [GitHub Actions](https://github.com/Son250825/ktpmud-bkt-vuontoan-starter/actions/runs/44500535573) |
+| Ngày Freeze | 19/11/2026 |
+
+### 2. Trạng thái Acceptance Criteria tại Freeze
+
+| Mã | Trạng thái | Bằng chứng |
+|---|---|---|
+| B-01 | Xong | Luồng tính năng được tích hợp vào giao diện bài tập; mã nguồn tại `public/assets/js/pages/exercise.js` |
+| B-02 | Xong | 12 câu hỏi mẫu trong `data/seed.json` |
+| B-03 | Xong | Logic ước lượng và kiểm tra kết quả tại `server/estimate.js` |
+| B-04 | Xong | Logic xử lý và chấm kết quả phía server tại `server/estimate.js`, `server/api.js` |
+| B-05 | Xong | Lưu kết quả và khôi phục sau khi tải lại trang; có kiểm thử API và giao diện |
+| B-06 | Xong | Phản hồi riêng cho phần ước lượng và phần tính chính xác |
+| B-07 | Xong | Phạm vi sửa đổi được giới hạn theo quyết định; các thành phần xác thực ngoài phạm vi không được chủ động sửa đổi |
+| B-08 | Xong | `tests/estimate.test.js`, `tests/estimate-api.test.js`, `tests/estimate-ui.test.js` |
+| B-09 | Xong | Lệnh kiểm thử tự động `npm test` trong `package.json` |
+| B-10 | Xong | Workflow CI tại `.github/workflows/ci.yml`; CI trên fork chạy thành công |
+| B-11 | Xong | Dữ liệu mẫu và `SECURITY_PRIVACY_CHECKLIST.md` trong phạm vi tính năng |
+| B-12 | Xong | Kiểm tra tương tác bàn phím, chuyển bước bằng Enter, thông báo lỗi và trạng thái giao diện được ghi trong `TEST_REPORT.md` |
+
+### 3. Kết quả kiểm thử tại Freeze
+
+| Nhóm kiểm thử | Số lượng |
+|---|---:|
+| Unit tests | 22 |
+| API tests | 9 |
+| UI tests | 19 |
+| Tổng số test thực tế | 50 |
+| Kết quả Node.js test runner báo cáo | 52 thành công, 0 thất bại |
+
+Hai kết quả chênh lệch là các nhóm test cha được Node.js test runner tính vào kết quả tổng hợp.
+
+Môi trường kiểm thử:
+- Hệ điều hành: Windows.
+- Node.js: 22.23.5.
+- npm: 10.9.9.
+- Cơ sở dữ liệu: SQLite.
+
+Kết quả được ghi tại `submissions/hoang_mai_toan_24/artifacts/TEST_REPORT.md`.
+
+### 4. Công việc chưa hoàn thành tại thời điểm Freeze
+
+| Công việc | Trạng thái | Lý do |
+|---|---|---|
+| Kiểm thử xâm nhập chuyên sâu | Chưa thực hiện | Thời gian Hackathon tập trung vào phát triển và kiểm thử chức năng; nhóm chưa có điều kiện thực hiện đánh giá bảo mật chuyên sâu |
+| Kiểm thử trên nhiều thiết bị và trình duyệt | Chưa hoàn thành đầy đủ | Nhóm chủ yếu kiểm thử trong môi trường Windows hiện có, chưa đủ điều kiện kiểm tra toàn diện các cấu hình khác |
+| Kiểm thử tải và hiệu năng ở quy mô lớn | Chưa thực hiện | Chưa triển khai kiểm thử tải chuyên biệt nên chưa đưa ra kết luận về khả năng chịu tải thực tế |
+| Quét toàn bộ lịch sử Git để tìm thông tin nhạy cảm | Chưa hoàn thành | Nhóm đã rà soát các tệp và cấu hình trong phạm vi kiểm tra nhưng chưa thực hiện quét chuyên biệt trên toàn bộ lịch sử commit |
+| Kiểm tra độc lập toàn bộ thành phần ngoài phạm vi sửa đổi | Chưa thực hiện đầy đủ | Các thành phần xác thực và quản lý giáo viên thuộc starter, nằm ngoài phạm vi phát triển của Track B |
+| Bằng chứng đóng góp độc lập của từng thành viên | Chưa đầy đủ | Lịch sử commit và review chưa thể hiện đầy đủ đóng góp độc lập của từng thành viên; các vai trò trong `CONTRIBUTIONS.md` mô tả phạm vi công việc, không thay thế bằng chứng commit/review thực tế |
+
+Các nội dung trên được ghi nhận là giới hạn hoặc công việc chưa hoàn thành của phiên bản đóng băng. Nhóm không tuyên bố đã thực hiện những kiểm thử hoặc hoạt động chưa có bằng chứng.
+
+### 5. Trạng thái bộ hồ sơ nộp bài
+
+| Tài liệu | Trạng thái |
+|---|---|
+| `README.md` | Hoàn thành |
+| `source-ref.json` | Đã có, sẽ cập nhật SHA cuối và release tag sau khi chốt commit |
+| `submission.json` | Hoàn thành |
+| `artifacts/AI_USE.md` | Hoàn thành |
+| `artifacts/CONTRIBUTIONS.md` | Hoàn thành |
+| `artifacts/DECISIONS.md` | Hoàn thành |
+| `artifacts/REQUIREMENTS.md` | Hoàn thành |
+| `artifacts/SECURITY_PRIVACY_CHECKLIST.md` | Hoàn thành |
+| `artifacts/TEST_REPORT.md` | Hoàn thành |
+| `slides/DEMO_SCRIPT.md` | Hoàn thành |
+| `progress/PROGRESS.md` | Đang hoàn thiện trước khi commit cuối |
+
+### 6. Kết luận Freeze
+
+Tại thời điểm 19/11/2026, nhóm đã hoàn thành phần phát triển tính năng, kiểm thử và các tài liệu chính của Track B. Mã nguồn trước khi cập nhật báo cáo đã được ghi nhận tại commit `0449f863a07227e30c8584826916b62cd5d48a8d`.
+
+Nhóm đang hoàn thiện báo cáo tiến độ để đưa vào bộ hồ sơ cuối cùng. Commit cuối cùng và release tag sẽ được xác định sau khi cập nhật và commit báo cáo này.
+
+Các giới hạn kiểm thử và công việc chưa hoàn thành đã được ghi nhận rõ ràng. Sau khi chốt hồ sơ, nhóm chuyển sang quy trình nộp bài chính thức theo hướng dẫn của Ban tổ chức.
