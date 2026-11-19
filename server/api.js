@@ -246,6 +246,87 @@ if (q.type === 'estimate') {
   res.json({ scorePercent: percent, correctCount: correct, totalCount: questions.length, starsEarned, totalStars: me.total_stars, detail });
 });
 
+/* ---------------- Khôi phục kết quả bài ước lượng ---------------- */
+router.get('/submissions/latest/:setId', requireAuth, (req, res) => {
+  const setId = req.params.setId;
+  const meta = setMeta(setId);
+
+  if (!meta) {
+    return res.status(404).json({ error: 'Không tìm thấy bộ câu hỏi.' });
+  }
+
+  const questions = db.prepare(
+    'SELECT * FROM questions WHERE set_id=? ORDER BY sort_order'
+  ).all(setId);
+
+  if (!questions.length || !questions.every(q => q.type === 'estimate')) {
+    return res.status(400).json({ error: 'Bộ câu hỏi không phải bài ước lượng.' });
+  }
+
+  // Chỉ lấy bài nộp của chính học sinh đang đăng nhập
+  const attempt = db.prepare(`
+    SELECT * FROM attempts
+    WHERE user_id=? AND ref_id=? AND kind=?
+    ORDER BY id DESC
+    LIMIT 1
+  `).get(req.user.id, setId, meta.kind);
+
+  if (!attempt) {
+    return res.status(404).json({ error: 'Chưa có kết quả bài làm.' });
+  }
+
+  let answers;
+
+  try {
+    answers = JSON.parse(attempt.answers_json || '{}');
+  } catch (_) {
+    return res.status(500).json({ error: 'Không thể đọc dữ liệu bài làm.' });
+  }
+
+  if (!answers || typeof answers !== 'object' || Array.isArray(answers)) {
+    return res.status(500).json({ error: 'Dữ liệu bài làm không hợp lệ.' });
+  }
+
+  const detail = questions.map(q => {
+    const answer = answers[q.id] || {};
+    const points = Number(q.points) || 0;
+
+    const result = gradeEstimate(
+      q.correct_answer,
+      answer,
+      points
+    );
+
+    return {
+      questionId: q.id,
+      correct: result.correct,
+      estimateCorrect: result.estimateCorrect,
+      exactCorrect: result.exactCorrect,
+      earnedPoints: result.earnedPoints,
+      correctAnswer: q.correct_answer,
+      studentAnswer: {
+        lower: answer.lower ?? '',
+        upper: answer.upper ?? '',
+        exact: answer.exact ?? ''
+      },
+      feedback: result.feedback
+    };
+  });
+
+  const me = db.prepare(
+    'SELECT total_stars FROM users WHERE id=?'
+  ).get(req.user.id);
+
+  res.json({
+    scorePercent: attempt.score_percent,
+    correctCount: attempt.correct_count,
+    totalCount: attempt.total_count,
+    starsEarned: attempt.stars_earned,
+    totalStars: me.total_stars,
+    detail
+  });
+});
+
 /* ---------------- Bảng xếp hạng (tính từ dữ liệu thật) ---------------- */
 router.get('/leaderboard', requireAuth, (req, res) => {
   const rows = db.prepare(`SELECT u.id,u.full_name,u.class_name,u.total_stars,

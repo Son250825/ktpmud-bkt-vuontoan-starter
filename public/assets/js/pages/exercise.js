@@ -643,8 +643,29 @@ async function loadEstimateQuestions() {
     throw new Error('Bộ câu hỏi ước lượng hiện chưa có câu hỏi.');
   }
 
-  // Đọc bản nháp đã lưu
+  // Đọc bản nháp trước để ưu tiên khôi phục bài đang làm
   const savedDraft = loadEstimateDraft();
+
+  // Chỉ khôi phục kết quả cũ khi không có bản nháp
+  if (!savedDraft) {
+    let previousResult = null;
+
+    try {
+      previousResult = await window.MathAPI.get(
+        `/api/submissions/latest/${estimateSetId}`
+      );
+    } catch (error) {
+      // Chưa từng nộp bài thì tiếp tục làm bài bình thường
+      if (error.message !== 'Chưa có kết quả bài làm.') {
+        throw error;
+      }
+    }
+
+    if (previousResult) {
+      renderEstimateResult(previousResult);
+      return;
+    }
+  }
 
   estimateAnswerCache = {};
 
@@ -671,6 +692,64 @@ async function loadEstimateQuestions() {
 
   renderEstimateQuestionNav();
   renderCurrentEstimateQuestion();
+}
+// Hiển thị lại kết quả bài ước lượng đã nộp
+function renderEstimateResult(result) {
+  estimateLastResult = result;
+
+  const feedback = document.getElementById('estimate-feedback');
+  const workingView = document.getElementById('estimate-working-view');
+  const resultView = document.getElementById('estimate-result-view');
+  const detailView = document.getElementById('estimate-detail-view');
+
+  if (!feedback || !workingView || !resultView || !detailView) return;
+
+  workingView.classList.add('hidden');
+  detailView.classList.add('hidden');
+  resultView.classList.remove('hidden');
+
+  feedback.replaceChildren();
+  feedback.classList.remove('hidden');
+
+  const details = result.detail || [];
+
+  const totalStars = details.reduce(
+    (sum, item) => sum + (Number(item.earnedPoints) || 0),
+    0
+  );
+
+  const maxStars = details.length * 5;
+
+  const title = document.createElement('h2');
+  title.className = 'text-2xl font-extrabold text-primary text-center mb-5';
+  title.textContent = 'Kết quả luyện tập';
+
+  const summaryBox = document.createElement('div');
+  summaryBox.className =
+    'rounded-2xl bg-yellow-50 border border-yellow-200 p-6 text-center';
+
+  const starDisplay = document.createElement('div');
+  starDisplay.className = 'text-5xl font-extrabold text-yellow-500';
+  starDisplay.textContent = `★ ${totalStars}/${maxStars}`;
+
+  const correctText = document.createElement('p');
+  correctText.className = 'mt-4 text-lg font-bold text-gray-800';
+  correctText.textContent =
+    `Em hoàn toàn chính xác ${result.correctCount}/${result.totalCount} câu`;
+
+  const savedText = document.createElement('p');
+  savedText.className = 'mt-2 text-sm text-gray-600';
+  savedText.textContent = 'Kết quả và tiến độ đã được lưu.';
+
+  summaryBox.append(starDisplay, correctText, savedText);
+  feedback.append(title, summaryBox);
+
+  if (result.starsEarned > 0) {
+    const bonus = document.createElement('p');
+    bonus.className = 'text-center font-bold text-yellow-600 mt-4';
+    bonus.textContent = `Em nhận thêm ${result.starsEarned} sao thưởng!`;
+    feedback.appendChild(bonus);
+  }
 }
 // Lưu câu đang hiển thị vào bộ nhớ tạm
 function saveCurrentEstimateAnswer() {
@@ -1072,63 +1151,7 @@ localStorage.removeItem(getEstimateDraftKey());
   // Lưu kết quả để sử dụng ở màn hình tổng kết và chi tiết
   estimateLastResult = result;
 
-  const feedback = document.getElementById('estimate-feedback');
-  const workingView = document.getElementById('estimate-working-view');
-  const resultView = document.getElementById('estimate-result-view');
-  const detailView = document.getElementById('estimate-detail-view');
-
-  if (!feedback || !workingView || !resultView || !detailView) return;
-
-  // Chuyển sang màn hình tổng kết
-  workingView.classList.add('hidden');
-  detailView.classList.add('hidden');
-  resultView.classList.remove('hidden');
-
-  feedback.replaceChildren();
-feedback.classList.remove('hidden');
-
-  const details = result.detail || [];
-
-  const totalStars = details.reduce(
-    (sum, item) => sum + (Number(item.earnedPoints) || 0),
-    0
-  );
-
-  const maxStars = details.length * 5;
-
-  // Tiêu đề
-  const title = document.createElement('h2');
-  title.className = 'text-2xl font-extrabold text-primary text-center mb-5';
-  title.textContent = 'Kết quả luyện tập';
-
-  // Khung tổng sao
-  const summaryBox = document.createElement('div');
-  summaryBox.className =
-    'rounded-2xl bg-yellow-50 border border-yellow-200 p-6 text-center';
-
-  const starDisplay = document.createElement('div');
-  starDisplay.className = 'text-5xl font-extrabold text-yellow-500';
-  starDisplay.textContent = `★ ${totalStars}/${maxStars}`;
-
-  const correctText = document.createElement('p');
-  correctText.className = 'mt-4 text-lg font-bold text-gray-800';
-  correctText.textContent =
-    `Em hoàn toàn chính xác ${result.correctCount}/${result.totalCount} câu`;
-
-  const savedText = document.createElement('p');
-  savedText.className = 'mt-2 text-sm text-gray-600';
-  savedText.textContent = 'Kết quả và tiến độ đã được lưu.';
-
-  summaryBox.append(starDisplay, correctText, savedText);
-  feedback.append(title, summaryBox);
-
-  // Thống kê sao thưởng của hệ thống cũ nếu có
-  if (result.starsEarned > 0) {
-    const bonus = document.createElement('p');
-    bonus.className = 'text-center font-bold text-yellow-600 mt-4';
-    bonus.textContent = `Em nhận thêm ${result.starsEarned} sao thưởng!`;
-    feedback.appendChild(bonus);
-  }
+    renderEstimateResult(result);
 }
 // Tự động cuộn đến bảng tổng kết sau khi nộp bài
 function showEstimateDetails() {

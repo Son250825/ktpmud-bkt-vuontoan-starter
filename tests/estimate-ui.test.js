@@ -64,10 +64,20 @@ function createFixture() {
   let postError = null;
 
   const api = {
-    get: async () => ({
-      setId: SET_ID,
-      questions
-    }),
+  get: async (url) => {
+    if (url.startsWith('/api/question-sets/')) {
+      return {
+        setId: SET_ID,
+        questions
+      };
+    }
+
+    if (url.startsWith('/api/submissions/latest/')) {
+      throw new Error('Chưa có kết quả bài làm.');
+    }
+
+    throw new Error(`API GET chưa được mock: ${url}`);
+  },
 
     post: async (url, body) => {
       postCount++;
