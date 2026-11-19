@@ -1,85 +1,234 @@
 
 # REQUIREMENTS — Track B: Vườn Toán Lớp 3
 
-## 1. Thông tin chung
-
-- **Dự án:** Vườn Toán Lớp 3
-- **Track:** B – Phát triển tính năng bài tập ước lượng
-- **Nhóm:** 24
+- **Nhóm:** N24
 - **Phiên bản:** 1.0
+- **Trạng thái:** Bản hoàn thiện chuẩn bị nộp
+- **Đặc tả gốc:** `docs/architecture-reference.md`
+- **Starter:** `fossbk-spec/ktpmud-bkt-vuontoan-starter`, tag `bkt-2026-v1`
+- **Commit starter được ghim:** `aca3ea934fadc02251c761443405546c7bc02fc7`
 
-## 2. Mục tiêu
+Dự án sử dụng dữ liệu synthetic, không kết nối hệ thống production và không sử dụng dữ liệu học sinh thật.
 
-Phát triển chức năng bài tập ước lượng dành cho học sinh lớp 3, giúp học sinh tập ước lượng kết quả trước khi thực hiện phép tính chính xác.
+---
 
-Chức năng được tích hợp vào hệ thống Vườn Toán Lớp 3 hiện có và không làm ảnh hưởng đến các dạng bài tập cũ.
+## 1. Phạm vi dự án
 
-## 3. Phạm vi chức năng
+### 1.1. Trong phạm vi
 
-### 3.1. Bộ câu hỏi
+Mở rộng ứng dụng Vườn Toán bằng dạng bài tập **ước lượng kết quả trước khi tính đúng**.
 
-- Hệ thống cung cấp 12 câu hỏi ước lượng trong dữ liệu seed.
-- Mỗi câu hỏi có đáp án chính xác và khoảng kết quả ước lượng hợp lý.
-- Nội dung câu hỏi tập trung vào các phép tính nhân và chia phù hợp với chương trình lớp 3.
+Dạng bài tập cho phép học sinh:
 
-### 3.2. Nhập câu trả lời
+1. Đọc câu hỏi phép nhân hoặc phép chia.
+2. Nhập một khoảng ước lượng hợp lý cho kết quả.
+3. Nộp ước lượng trước khi nhập kết quả chính xác.
+4. Nhập kết quả tính chính xác.
+5. Nhận phản hồi và điểm cho từng phần.
 
-Học sinh nhập ba giá trị:
+Bộ câu hỏi sử dụng dữ liệu synthetic, gồm 12 câu hỏi thuộc nội dung nhân và chia trong phạm vi chương trình đã chọn.
 
-- `lower`: Cận dưới của khoảng ước lượng.
-- `upper`: Cận trên của khoảng ước lượng.
-- `exact`: Kết quả tính chính xác.
+Việc chấm điểm được thực hiện bằng quy tắc xác định trong code, không phụ thuộc vào mô hình AI hoặc đánh giá chủ quan.
 
-Các giá trị phải là số nguyên không âm.
+### 1.2. Ngoài phạm vi
 
-Điều kiện hợp lệ:
+- Thay đổi nội dung hoặc cách chấm của các dạng bài tập cũ.
+- Viết lại toàn bộ hệ thống.
+- Thay đổi authentication, authorization hoặc session.
+- Kết nối cơ sở dữ liệu hay ứng dụng production thật.
+- Sử dụng dữ liệu cá nhân thật của học sinh hoặc giáo viên.
+- Sử dụng LLM để sinh hoặc chấm đáp án trong lúc chạy.
+- Triển khai ứng dụng công khai.
+
+---
+
+## 2. Đối chiếu kiến trúc hệ thống ban đầu
+
+Căn cứ `docs/architecture-reference.md` của starter:
+
+| Hiện trạng của starter | Yêu cầu khi mở rộng |
+|---|---|
+| Backend sử dụng Node.js và Express | Tiếp tục sử dụng kiến trúc backend hiện có |
+| Cơ sở dữ liệu SQLite | Tận dụng cấu trúc dữ liệu hiện có, chỉ mở rộng khi cần thiết |
+| Frontend sử dụng HTML, CSS và JavaScript | Tích hợp dạng bài mới vào luồng học tập hiện có |
+| Các dạng bài cũ có cơ chế chấm điểm riêng | Không làm thay đổi hành vi của các dạng bài cũ |
+| API nộp bài xử lý kết quả và tiến độ học tập | Mở rộng xử lý dạng bài ước lượng, bảo đảm kết quả được lưu |
+| Hệ thống authentication và session đã có | Giữ nguyên cơ chế đăng nhập và phân quyền |
+
+### 2.1. Nguyên tắc mở rộng
+
+- Chỉ bổ sung chức năng cần thiết cho dạng bài ước lượng.
+- Không viết lại các thành phần nền tảng của starter.
+- Không thay đổi ý nghĩa và cách chấm điểm của các dạng bài cũ.
+- Không chỉnh sửa `server/auth.js` và các nhóm API authentication, teacher, admin.
+- Bảo đảm các chức năng cũ vẫn hoạt động sau khi bổ sung chức năng mới.
+
+---
+
+## 3. Quy tắc nghiệp vụ
+
+### 3.1. Dữ liệu câu hỏi
+
+Mỗi câu hỏi có các thông tin cần thiết để hiển thị và chấm bài, bao gồm:
+
+- Mã câu hỏi.
+- Loại câu hỏi.
+- Nội dung câu hỏi.
+- Điểm tối đa.
+- Đáp án chính xác.
+- Khoảng đáp án được chấp nhận cho phần ước lượng.
+
+Bộ câu hỏi gồm 12 câu hỏi synthetic về phép nhân và phép chia theo phạm vi đã lựa chọn.
+
+### 3.2. Định dạng đáp án
+
+Đáp án được lưu theo định dạng:
+
+`exact|min-max`
+
+Trong đó:
+
+- `exact`: kết quả chính xác.
+- `min`: cận dưới của khoảng đáp án hợp lý.
+- `max`: cận trên của khoảng đáp án hợp lý.
+
+Ví dụ:
+
+`14|11-17`
+
+Nghĩa là kết quả chính xác là 14; khoảng ước lượng được chấp nhận là từ 11 đến 17.
+
+### 3.3. Quy tắc kiểm tra ước lượng
+
+Một khoảng ước lượng được xem là hợp lý khi:
 
 - Cận dưới nhỏ hơn cận trên.
-- Cận dưới không vượt quá kết quả chính xác.
-- Kết quả chính xác không vượt quá cận trên.
-- Các giá trị nằm trong giới hạn cho phép của câu hỏi.
+- Cả hai giá trị đều là số nguyên không âm.
+- Khoảng học sinh nhập có chứa đáp án chính xác.
+- Các giá trị nằm trong giới hạn đáp án được quy định cho câu hỏi.
 
-### 3.3. Đánh giá kết quả ước lượng
+Có thể biểu diễn điều kiện kiểm tra như sau:
 
-Khoảng ước lượng được xem là hợp lý khi chứa đáp án chính xác và nằm trong khoảng từ 80% đến 120% đáp án.
+`Min ≤ L ≤ E ≤ U ≤ Max`
 
-Hệ thống chấm điểm:
+Trong đó:
+
+- `E`: đáp án chính xác.
+- `L`: cận dưới học sinh nhập.
+- `U`: cận trên học sinh nhập.
+- `Min`, `Max`: giới hạn của khoảng đáp án được chấp nhận.
+
+### 3.4. Quy tắc tính điểm
+
+Mỗi câu hỏi có tối đa 5 điểm:
 
 - 3 điểm nếu khoảng ước lượng hợp lý.
 - 2 điểm nếu kết quả tính chính xác đúng.
-- Tổng điểm tối đa: 5 điểm cho mỗi câu.
 
-Hệ thống phản hồi theo kết quả làm bài để học sinh biết mức độ chính xác của câu trả lời.
+Hai phần được đánh giá độc lập. Vì vậy, học sinh có thể được điểm phần ước lượng dù tính sai kết quả chính xác, hoặc được điểm phần tính chính xác dù ước lượng chưa hợp lý.
 
-### 3.4. Lưu kết quả
+### 3.5. Kiểm tra dữ liệu đầu vào
 
-- Hệ thống gửi câu trả lời lên máy chủ để chấm điểm.
-- Kết quả, điểm số và tiến độ làm bài được lưu trong cơ sở dữ liệu.
-- Dữ liệu câu trả lời được lưu để phục vụ việc xem lại và theo dõi tiến độ.
-- Đáp án chính xác không được trả về trong API lấy câu hỏi trước khi học sinh nộp bài.
+Hệ thống cần kiểm tra:
 
-### 3.5. Trải nghiệm nhập liệu
+- Không bỏ trống các trường bắt buộc.
+- Chỉ chấp nhận giá trị số nguyên không âm.
+- Cận dưới phải nhỏ hơn cận trên.
+- Khoảng nhập phải thỏa mãn điều kiện nghiệp vụ.
+- Không chấp nhận dữ liệu sai định dạng hoặc không hợp lệ.
 
-- Hỗ trợ nhập lần lượt cận dưới, cận trên và kết quả chính xác bằng bàn phím.
-- Có kiểm tra dữ liệu đầu vào và thông báo khi dữ liệu không hợp lệ.
-- Hỗ trợ lưu bản nháp câu trả lời trên trình duyệt để khôi phục khi cần.
+Dữ liệu không hợp lệ phải được xử lý an toàn và trả về thông báo phù hợp.
 
-## 4. Yêu cầu kỹ thuật
+---
 
-- Backend sử dụng Node.js và Express.
-- Cơ sở dữ liệu sử dụng SQLite.
-- Giao diện sử dụng HTML, CSS và JavaScript.
-- Logic chấm điểm được tách riêng trong `server/estimate.js`.
-- Các chức năng được kiểm thử bằng `node:test`.
+## 4. Acceptance Criteria và truy vết
 
-## 5. Tiêu chí chấp nhận
+| Mã | Tiêu chí chấp nhận | Yêu cầu đối với hệ thống | Thành phần liên quan |
+|---|---|---|---|
+| **B-01** | Tích hợp vào luồng học hiện có | Học sinh truy cập được bài tập ước lượng từ giao diện học tập hiện có, không phải một trang demo độc lập | `public/assets/js/components/curriculum-view.js`, frontend |
+| **B-02** | Có đủ dữ liệu câu hỏi | Có ít nhất 12 câu hỏi synthetic phục vụ dạng bài ước lượng | `data/seed.json`, dữ liệu câu hỏi |
+| **B-03** | Quy tắc chấm điểm rõ ràng | Quy tắc kiểm tra khoảng ước lượng và kết quả chính xác phải xác định, nhất quán và kiểm thử được | Logic xử lý ước lượng, `DECISIONS.md` |
+| **B-04** | Không để lộ đáp án trước khi nộp | API lấy câu hỏi không cung cấp đáp án chính xác cho học sinh trước khi nộp bài | `server/api.js`, logic trả dữ liệu câu hỏi |
+| **B-05** | Lưu kết quả và khôi phục trạng thái | Kết quả được lưu phía server; trạng thái bài làm và kết quả đã nộp được khôi phục khi tải lại trang | `server/api.js`, `server/db.js`, `public/assets/js/pages/exercise.js` |
+| **B-06** | Phản hồi rõ ràng | Phân biệt kết quả ước lượng và kết quả tính chính xác; hiển thị phản hồi tương ứng với từng phần | Frontend bài tập ước lượng |
+| **B-07** | Bảo toàn hệ thống gốc | Không thay đổi cơ chế authentication, session, tài khoản mẫu và deployment của starter | `server/auth.js`, các API auth/teacher/admin |
+| **B-08** | Kiểm thử chức năng | Có kiểm thử cho trường hợp hợp lệ, không hợp lệ, trường hợp biên và các tình huống chấm điểm | `tests/` |
+| **B-09** | Chạy kiểm thử tự động | Có lệnh `npm test`; kiểm thử có thể chạy từ môi trường cài đặt theo hướng dẫn | `package.json` |
+| **B-10** | Tích hợp CI | GitHub Actions chạy cài đặt phụ thuộc và kiểm thử khi có Pull Request hoặc push lên nhánh main | `.github/workflows/ci.yml` |
+| **B-11** | Bảo vệ dữ liệu và quyền riêng tư | Chỉ sử dụng dữ liệu synthetic; không đưa thông tin cá nhân hoặc bí mật vào mã nguồn và tài liệu | `data/seed.json`, `README.md`, `SECURITY_PRIVACY_CHECKLIST.md` |
+| **B-12** | Khả năng sử dụng và truy cập | Giao diện hỗ trợ thao tác bằng bàn phím, có chỉ báo focus và thông báo lỗi dễ hiểu | Frontend, CSS và `TEST_REPORT.md` |
 
-- [ ] Hiển thị và làm được bộ câu hỏi ước lượng.
-- [ ] Nhập được cận dưới, cận trên và kết quả chính xác.
-- [ ] Phát hiện dữ liệu đầu vào không hợp lệ.
-- [ ] Chấm điểm đúng theo quy tắc 3 điểm và 2 điểm.
-- [ ] Trả về phản hồi phù hợp với kết quả làm bài.
-- [ ] Lưu được kết quả và tiến độ vào cơ sở dữ liệu.
-- [ ] Không để lộ đáp án trước khi nộp bài.
-- [ ] Không làm ảnh hưởng đến các chức năng bài tập cũ.
-- [ ] Các bài kiểm thử tự động chạy thành công.
+---
+
+## 5. Kế hoạch kiểm thử
+
+| Nhóm kiểm thử | Nội dung | Kết quả mong đợi |
+|---|---|---|
+| Kiểm thử dữ liệu câu hỏi | Kiểm tra số lượng và cấu trúc câu hỏi | Có đủ dữ liệu và dữ liệu đúng định dạng |
+| Kiểm thử ước lượng | Nhập khoảng hợp lý và không hợp lý | Hệ thống phân loại đúng |
+| Kiểm thử kết quả chính xác | Nhập đúng và sai kết quả | Hệ thống chấm đúng phần tính chính xác |
+| Kiểm thử dữ liệu không hợp lệ | Bỏ trống, nhập sai định dạng hoặc giá trị không hợp lệ | Hệ thống từ chối dữ liệu và thông báo phù hợp |
+| Kiểm thử API | Kiểm tra phản hồi, quyền truy cập và dữ liệu trả về | API xử lý đúng, không để lộ đáp án trước khi nộp |
+| Kiểm thử lưu trạng thái | Tải lại trang khi đang làm và sau khi nộp | Trạng thái phù hợp được khôi phục |
+| Kiểm thử hồi quy | Kiểm tra các dạng bài cũ | Chức năng cũ không bị ảnh hưởng |
+| Kiểm thử giao diện | Kiểm tra thao tác chuột và bàn phím | Giao diện hoạt động đúng và dễ sử dụng |
+
+Kết quả thực tế, môi trường kiểm thử, số lượng test và giới hạn kiểm thử được trình bày trong `TEST_REPORT.md`.
+
+---
+
+## 6. Điều kiện hoàn thành
+
+Dự án được xem là đáp ứng yêu cầu khi:
+
+1. Chức năng ước lượng được tích hợp vào luồng học tập hiện có.
+2. Có đủ bộ câu hỏi synthetic theo phạm vi đã xác định.
+3. Quy tắc kiểm tra và tính điểm được triển khai nhất quán.
+4. Đáp án không bị trả về trước thời điểm được phép.
+5. Kết quả được lưu và trạng thái bài làm được khôi phục phù hợp.
+6. Các dạng bài cũ vẫn hoạt động bình thường.
+7. Các bài kiểm thử tự động chạy thành công.
+8. CI thực hiện kiểm thử trên Pull Request.
+9. README có hướng dẫn cài đặt, chạy và kiểm thử.
+10. Có đầy đủ tài liệu thiết kế, kiểm thử, bảo mật, sử dụng AI và đóng góp của thành viên.
+
+---
+
+## 7. Tài liệu liên quan
+
+| Tài liệu | Nội dung |
+|---|---|
+| `README.md` | Giới thiệu dự án và hướng dẫn cài đặt, chạy, kiểm thử |
+| `DECISIONS.md` | Các quyết định thiết kế và lý do lựa chọn |
+| `TEST_REPORT.md` | Môi trường, kết quả kiểm thử và giới hạn |
+| `SECURITY_PRIVACY_CHECKLIST.md` | Kiểm tra bảo mật và quyền riêng tư |
+| `AI_USE.md` | Khai báo và mô tả việc sử dụng AI |
+| `CONTRIBUTIONS.md` | Phân công và đóng góp của thành viên |
+
+---
+
+## 8. Cơ sở kiến trúc và đặc tả gốc
+
+### 8.1. Starter và tài liệu chuẩn
+
+- Repository gốc: `fossbk-spec/ktpmud-bkt-vuontoan-starter`.
+- Tag starter: `bkt-2026-v1`.
+- Commit starter được ghim: `aca3ea934fadc02251c761443405546c7bc02fc7`.
+- Công nghệ: Node.js, Express, SQLite, JavaScript, HTML và CSS.
+- Tài liệu kiến trúc chính thức: `docs/architecture-reference.md`.
+
+Tài liệu kiến trúc mô tả hệ thống ban đầu và các thành phần hiện có, không phải lời giải được thiết kế sẵn cho chức năng mới.
+
+### 8.2. Nguyên tắc tương thích
+
+Chức năng mới phải mở rộng hệ thống hiện tại, không làm thay đổi hành vi của các dạng câu hỏi cũ.
+
+Các thành phần authentication, session, tài khoản mẫu và deployment nằm ngoài phạm vi thay đổi của nhóm.
+
+### 8.3. Căn cứ thiết kế chấm điểm
+
+Hệ thống ban đầu sử dụng cơ chế so sánh đáp án chính xác. Cơ chế này không đáp ứng trực tiếp yêu cầu chấm một khoảng ước lượng.
+
+Vì vậy, chức năng mới cần có logic xử lý riêng cho phần ước lượng, đồng thời giữ nguyên cơ chế chấm của các dạng bài cũ.
+
+Các quyết định về cách tổ chức logic, cách lưu dữ liệu và cách tích hợp vào luồng nộp bài được giải thích trong `DECISIONS.md`.
